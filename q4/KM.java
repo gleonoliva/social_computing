@@ -70,9 +70,9 @@ public class KM {
 
         public String toString() {
             StringBuffer sb = new StringBuffer();
-            sb.append(String.format("Cost: %d\n", computeCost()));
+            sb.append(String.format("%d\n", computeCost()));
             for (Pair p : _solution) {
-                sb.append(String.format("[%d => %d]\n", p.row, p.col));
+                sb.append(String.format("(%d, %d)\n", p.row + 1, p.col + 1));
             }
 
             return sb.toString();
