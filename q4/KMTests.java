@@ -32,9 +32,8 @@ public class KMTests {
         String inputFilePath = "input.txt";
         
         int[][] m = loadMatrix(inputFilePath);
-        System.out.println("Is this the real life?");
         assertNotNull(m);
-        KM km = new KM();
-        km.runKuhnMunkresAlgorithm(m);
+        KM km = new KM(m);
+        km.run();
     }
 }

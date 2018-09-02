@@ -6,6 +6,16 @@ public class KM {
     int[][] assign;
 
     ArrayList<Solution> possibleSolutions;
+    
+    public KM(int[][] matrix) {
+        this.matrix = matrix;
+        this.assign = new int[matrix.length][matrix.length];
+        this.possibleSolutions = new ArrayList<>();
+        
+        for (int i = 0; i < assign.length; i++) {
+            copyTo(assign[i], matrix[i]);
+        }
+    }
 
     class Pair {
         int row, col;
@@ -151,16 +161,7 @@ public class KM {
         System.out.println(optimalSolution);
     }
 
-    public void runKuhnMunkresAlgorithm(int[][] matrix) {
-
-        this.matrix = matrix;
-        this.assign = new int[matrix.length][matrix.length];
-        this.possibleSolutions = new ArrayList<>();
-        
-        for (int i = 0; i < assign.length; i++) {
-            copyTo(assign[i], matrix[i]);
-        }
-
+    public void run() {
         // Step one
         for (int i = 0 ; i < matrix.length; i++ ){
             int low = Arrays.stream(matrix[i]).min().getAsInt();
@@ -195,9 +196,9 @@ public class KM {
             for (int j = 0; j < n; j++) 
                 matrix[i][j] = in.nextInt();
                 
-        KM km = new KM();
+        KM km = new KM(matrix);
 
-        km.runKuhnMunkresAlgorithm(matrix);
+        km.run();
     }
 
 }
