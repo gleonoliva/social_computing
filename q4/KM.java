@@ -1,20 +1,45 @@
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class KM {
 
     int[][] matrix;
     int[][] assign;
+    int[][] eqGraph;
 
     ArrayList<Solution> possibleSolutions;
+    
+    int[] xLabeling;
+    int[] yLabeling;
     
     public KM(int[][] matrix) {
         this.matrix = matrix;
         this.assign = new int[matrix.length][matrix.length];
+        this.eqGraph = new int[matrix.length][matrix.length];
         this.possibleSolutions = new ArrayList<>();
         
         for (int i = 0; i < assign.length; i++) {
             copyTo(assign[i], matrix[i]);
         }
+    }
+    
+    private void findInitialFeasibleLabeling() {
+        xLabeling = new int[matrix.length];
+        yLabeling = new int[matrix.length];
+        
+        for (int i = 0; i < matrix.length; i++) {
+            int max = Integer.MIN_VALUE;
+            for (int j = 0; j < matrix[i].length; j++) {
+                max = Math.max(matrix[i][j], max);
+            }
+            xLabeling[i] = max;
+        }
+        
+        System.out.println("X Labels:");
+        System.out.println(Arrays.toString(xLabeling));
+        
+        System.out.println("Y Labels:");
+        System.out.println(Arrays.toString(yLabeling));
     }
 
     class Pair {
@@ -160,30 +185,121 @@ public class KM {
         System.out.printf("Optimal solution found in %d ms:\n", end - start);
         System.out.println(optimalSolution);
     }
-
-    public void run() {
-        // Step one
-        for (int i = 0 ; i < matrix.length; i++ ){
-            int low = Arrays.stream(matrix[i]).min().getAsInt();
-            for (int j = 0; j < matrix[i].length; j++) {
-                assign[i][j] -= low;
-            }
+    
+    private Matching matching;
+    
+    private void generateInitialMatching() {
+        matching = new Matching();
+        
+        for (int i = 0; i < eqGraph.length; i++)
+            for (int j = 0; j < eqGraph.length; j++)
+                if (eqGraph[i][j] != 0) {
+                    Pair initialMatch = new Pair(i, j);
+                    matching.addEdge(initialMatch);
+                    return;
+                }
+    }
+    
+    class Matching {
+        Set<Pair> _edges;
+        Set<Integer> _S;
+        Set<Integer> _T;
+        
+        public Matching() {
+            _edges = new HashSet<Pair>();
+            _S = new HashSet<>();
+            _T = new HashSet<>();
         }
-
-        // Step two
-        for (int i = 0; i < assign.length; i++) {
-            int min = Integer.MAX_VALUE;
-            for (int j = 0; j < assign.length; j++) {
-                min = Math.min(min, matrix[j][i]);
+        
+        public void addEdge(Pair p) {
+            _S.add(p.row);
+            
+            _edges.add(p);
+        }
+        
+        public boolean isPerfect() {
+            boolean[] x = new boolean[matrix.length];
+            boolean[] y = new boolean[matrix.length];
+            for (Pair p : _edges) {
+                x[p.row] = true;
+                y[p.col] = true;
             }
             
-            for (int j = 0; j < assign.length; j++) {
-                assign[j][i] = Math.max(0, assign[j][i] - min);
+            for (boolean b : x)
+                if (!b) return false;
+                
+            for (boolean b : y)
+                if (!b) return false;
+                
+            return true;
+        }
+        
+        public Set<Integer> getFreeVertexS() {
+            return _edges.stream().map(pair -> pair.row)
+                .collect(Collectors.toCollection(HashSet::new));
+        }
+        
+        public Set<Integer> getFreeVertexT() {
+            return _edges.stream().map(p -> p.col)
+                .collect(Collectors.toCollection(HashSet::new));
+        }
+    }
+    
+    private void computeEqualityGraph() {
+        for (int i = 0; i < eqGraph.length; i++) {
+            for (int j = 0; j < eqGraph[i].length; j++) {
+                if (matrix[i][j] == xLabeling[i] + yLabeling[j]) {
+                    eqGraph[i][j] = matrix[i][j];
+                } else {
+                    eqGraph[i][j] = 0;
+                }
             }
         }
+        
+        System.out.println("Equality Graph:");
+        for (int[] row : eqGraph)
+            System.out.println(Arrays.toString(row));
+    }
+    
+    
 
-        // Step three
-        findSolution();
+    public void run() {
+        
+        // 1. Generate initial labeling l and matching M in E_l
+        findInitialFeasibleLabeling();
+        computeEqualityGraph();
+        generateInitialMatching();
+        
+        // 2. If M perfect stop!
+        while(!matching.isPerfect()) {
+        
+            if ()
+        
+            return;
+        }
+
+//        // Step one
+//        for (int i = 0 ; i < matrix.length; i++ ){
+//            int low = Arrays.stream(matrix[i]).min().getAsInt();
+//            for (int j = 0; j < matrix[i].length; j++) {
+//                assign[i][j] -= low;
+//            }
+//        }
+
+//        // Step two
+//        for (int i = 0; i < assign.length; i++) {
+//            int min = Integer.MAX_VALUE;
+//            for (int j = 0; j < assign.length; j++) {
+//                min = Math.min(min, matrix[j][i]);
+//            }
+//            
+//            for (int j = 0; j < assign.length; j++) {
+//                assign[j][i] = Math.max(0, assign[j][i] - min);
+//            }
+//        }
+
+//        // Step three
+//        findSolution();
     }
 
     public static void main(String args[]) {
