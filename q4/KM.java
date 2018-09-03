@@ -3,11 +3,11 @@ import java.util.stream.Collectors;
 
 public class KM {
 
+    private final boolean DEBUG = true;
+
     int[][] matrix;
     int[][] assign;
     int[][] eqGraph;
-
-    ArrayList<Solution> possibleSolutions;
     
     int[] xLabeling;
     int[] yLabeling;
@@ -16,11 +16,6 @@ public class KM {
         this.matrix = matrix;
         this.assign = new int[matrix.length][matrix.length];
         this.eqGraph = new int[matrix.length][matrix.length];
-        this.possibleSolutions = new ArrayList<>();
-        
-        for (int i = 0; i < assign.length; i++) {
-            copyTo(assign[i], matrix[i]);
-        }
     }
     
     private void findInitialFeasibleLabeling() {
@@ -35,11 +30,13 @@ public class KM {
             xLabeling[i] = max;
         }
         
-        System.out.println("X Labels:");
-        System.out.println(Arrays.toString(xLabeling));
-        
-        System.out.println("Y Labels:");
-        System.out.println(Arrays.toString(yLabeling));
+        if (DEBUG) {
+            System.out.println("X Labels:");
+            System.out.println(Arrays.toString(xLabeling));
+            
+            System.out.println("Y Labels:");
+            System.out.println(Arrays.toString(yLabeling));
+        }
     }
 
     class Pair {
@@ -54,136 +51,6 @@ public class KM {
             return String.format("[%d => %d]", row, col);
         }
 
-    }
-    
-    class Solution implements Cloneable {
-        HashSet<Pair> _solution;
-
-        public Solution() {
-            _solution = new HashSet<>();
-        }
-
-        public void addPair(Pair p) {
-            _solution.add(p);
-        }
-
-        public void removePair(Pair p) {
-            _solution.remove(p);
-        }
-
-        public boolean isRepOk() {
-            HashSet<Integer> x = new HashSet<>();
-            HashSet<Integer> y = new HashSet<>();
-
-            for (Pair p : _solution) {
-                x.add(p.row);
-                y.add(p.col);
-            }
-
-            return x.size() == y.size();
-        }
-        
-        public int computeCost() {
-            int cost = 0;
-            for (Pair p : _solution) {
-                cost += matrix[p.row][p.col];
-            }
-            return cost;
-        }
-
-        public Object clone() {
-            Solution clone = null;
-            try {
-                clone = (Solution) super.clone();
-                clone._solution = (HashSet<Pair>)this._solution.clone();
-            } catch (CloneNotSupportedException e) {
-                e.printStackTrace();
-            }
-
-            return clone;
-        }
-
-        public String toString() {
-            StringBuffer sb = new StringBuffer();
-            sb.append(String.format("%d\n", computeCost()));
-            for (Pair p : _solution) {
-                sb.append(String.format("(%d, %d)\n", p.row + 1, p.col + 1));
-            }
-
-            return sb.toString();
-        }
-    }
-
-    private int lowest(int[] array) {
-        int val = Integer.MAX_VALUE;
-        for (int i = 0; i < array.length; i++) {
-            val = Math.min(val, array[i]);
-        }
-        return val;
-    }
-
-    private void copyTo(int[] to, int[] from) {
-        if (to.length != from.length) return;
-
-        for(int i = 0;i < to.length; i++)
-            to[i] = from[i];
-    }
-    
-    private void findAllPossibleSolutions(int row, Solution solution) {
-
-        if (row == matrix.length) {
-            // We must have a solution here.
-            if (solution.isRepOk()) {
-                possibleSolutions.add((Solution)solution.clone());
-            }
-            return;
-        }
-
-        for (int col = 0; col < matrix.length; col++) {
-            if (assign[row][col] == 0) {
-                Pair p = new Pair(row, col);
-                solution.addPair(p);
-                
-                findAllPossibleSolutions(row + 1, solution);
-                solution.removePair(p); // Back-track
-            }
-        }
-    }
-
-    private Solution findOptimalSolution() {
-        Solution optimalSolution = null;
-        int optimalCost = Integer.MAX_VALUE;
-        for (Solution solution : possibleSolutions) {
-            int cost = solution.computeCost();
-            if (cost < optimalCost) {
-                optimalCost = cost;
-                optimalSolution = solution;
-            }
-        }
-        return optimalSolution;
-    }
-
-    private void findSolution() {
-        Solution solution = new Solution();
-        
-        long start = System.currentTimeMillis();
-        
-        findAllPossibleSolutions(0, solution);
-        
-        long end = System.currentTimeMillis();
-        
-        Solution optimalSolution = findOptimalSolution();
-        if (optimalSolution == null) {
-            System.out.println("No solution found :(");
-            return;
-        }
-        
-        int solutionCost = optimalSolution.computeCost();
-        
-        System.out.printf("Kuhn Munkres found %d possible solutions.\n", possibleSolutions.size());
-        
-        System.out.printf("Optimal solution found in %d ms:\n", end - start);
-        System.out.println(optimalSolution);
     }
     
     private Matching matching;
@@ -212,9 +79,45 @@ public class KM {
         }
         
         public void addEdge(Pair p) {
-            _S.add(p.row);
-            
             _edges.add(p);
+        }
+
+        public void addToS(HashSet<Integer> vertices) {
+            _S.addAll(vertices);
+        }
+
+        public void addToT(HashSet<Integer> vertices) {
+            _T.addAll(vertices);
+        }
+
+        public Set<Integer> getS() {
+            return _S;
+        }
+
+        public Set<Integer> getT() {
+            return _T;
+        }
+
+        public int getCost() {
+            return _edges.stream()
+                .mapToInt(p -> matrix[p.row][p.col])
+                .sum();
+        }
+
+        public int getU() {
+            Set<Integer> matchedX = _edges.stream()
+                .mapToInt(p -> p.row)
+                .collect(Collectors.toCollection(HashSet::new));
+            
+            Set<Integer> allX = IntStream.range(0, matrix.length)
+                .collect(Collectors.toCollection(HashSet::new));
+
+            allX.removeAll(matchedX);
+            
+            // There must be at least one item
+            int u = allX.iterator().next();
+            
+            return u;
         }
         
         public boolean isPerfect() {
@@ -234,21 +137,28 @@ public class KM {
             return true;
         }
         
-        public Set<Integer> getFreeVertexS() {
-            return _edges.stream().map(pair -> pair.row)
-                .collect(Collectors.toCollection(HashSet::new));
+        public int matchedWith(int axis, int id) {
+            
         }
-        
-        public Set<Integer> getFreeVertexT() {
-            return _edges.stream().map(p -> p.col)
-                .collect(Collectors.toCollection(HashSet::new));
+
+        public String toString() {
+            StringBuffer sb = new StringBuffer();
+            sb.append(getCost() + "\n");
+            for (Pair p : _edges) {
+                sb.append(String.format("(%d,%d)\n", p.row, p.col));
+            }
+            return sb.toString();
         }
     }
+
+    private HashSet<Pair> eqGraphEdges = new HashSet<Pair>();
     
     private void computeEqualityGraph() {
+        eqGraphEdges.clear();
         for (int i = 0; i < eqGraph.length; i++) {
             for (int j = 0; j < eqGraph[i].length; j++) {
                 if (matrix[i][j] == xLabeling[i] + yLabeling[j]) {
+                    eqGraphEdges.add(new Pair(i, j));
                     eqGraph[i][j] = matrix[i][j];
                 } else {
                     eqGraph[i][j] = 0;
@@ -261,9 +171,44 @@ public class KM {
             System.out.println(Arrays.toString(row));
     }
     
+    private Set<Integer> getNeighbors(Set<Integer> s) {
+        // N_l(S)
+        return eqGraphEdges.stream()
+            .filter(edge -> s.contains(edge.row))
+            .mapToInt(edge -> edge.col)
+            .collect(Collectors.toCollection(HashSet::new));
+    }
+    
+    private int computeAlpha(Set<Integer> s, Set<Integer> t) {
+        Set<Integer> allY =-IntStream.range(0, matrix.length)
+            .collect(Collectors.toCollection(HashSet::new));
+        allY.removeAll(t);
+        
+        int min = Integer.MAX_VALUE;
+        for (int x : s) {
+            for (int y : allY) {
+                min = Math.min(min, xLabeling[x] + yLabeling[y] - matrix[x][y]);
+            }
+        }
+        return min;
+    }
+    
+    private void updateLabeling(int alpha, Set<Integer> s, Set<Integer> t) {
+        for (int x : s) {
+            xLabeling[x] -= alpha;
+        }
+        
+        for (int y : t) {
+            yLabeling[y] += alpha;
+        }
+    }
+    
+    private void flipAugmentingPath(Set<Integer> s, Set<Integer> t) {
+        
+    }
     
 
-    public void run() {
+    public String run() {
         
         // 1. Generate initial labeling l and matching M in E_l
         findInitialFeasibleLabeling();
@@ -273,38 +218,42 @@ public class KM {
         // 2. If M perfect stop!
         while(!matching.isPerfect()) {
         
-            if ()
-        
-            return;
+            int u = matching.getU(); // free vertex
+            Set<Integer> S = matching.getS();
+            Set<Integer> T = matching.getT();
+
+            S.add(u);
+
+            Set<Integer> neighbors = getNeighbors(S);
+
+            if (neighbors.equals(T)) {
+                int alpha = computeAlpha(S, T);
+                updateLabeling(alpha, S, T);
+                computeEqualityGraph();
+            } else {
+                neighbors.removeAll(T);
+                int y = neighbors.iterator().next();
+                int xMatching = matching.matchedWith(1, y);
+
+                if (xMatching >= 0) {
+                    // y is matched, so extend alt tree.
+                    S.add(xMatching);
+                    T.add(y); // Go to 3
+                } else {
+                    // y is free
+                    T.add(y);
+                    flipAugmentingPath(S, T); // Go to 2
+                    S.clear();
+                    T.clear();
+                }
+            }
         }
 
-//        // Step one
-//        for (int i = 0 ; i < matrix.length; i++ ){
-//            int low = Arrays.stream(matrix[i]).min().getAsInt();
-//            for (int j = 0; j < matrix[i].length; j++) {
-//                assign[i][j] -= low;
-//            }
-//        }
-
-//        // Step two
-//        for (int i = 0; i < assign.length; i++) {
-//            int min = Integer.MAX_VALUE;
-//            for (int j = 0; j < assign.length; j++) {
-//                min = Math.min(min, matrix[j][i]);
-//            }
-//            
-//            for (int j = 0; j < assign.length; j++) {
-//                assign[j][i] = Math.max(0, assign[j][i] - min);
-//            }
-//        }
-
-//        // Step three
-//        findSolution();
+        return mathing.toString();
     }
 
     public static void main(String args[]) {
         Scanner in = new Scanner(System.in);
-        System.out.println("Hola Kuhn-Munkres");
         int n = in.nextInt(); // Number of rows and column
         int[][] matrix = new int[n][n];
         
@@ -314,7 +263,8 @@ public class KM {
                 
         KM km = new KM(matrix);
 
-        km.run();
+        String result = km.run();
+        System.out.print(result);
     }
 
 }
