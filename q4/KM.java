@@ -47,6 +47,19 @@ public class KM {
         public String toString() {
             return String.format("[%d => %d]", row, col);
         }
+        
+        public boolean equals(Object o) {
+            if (o == this) return true;
+            if (o == null) return false;
+            if (getClass() != o.getClass()) return false;
+            Pair p = (Pair)o;
+            return this.row == p.row 
+                    && this.col == p.col;
+        }
+        
+        public int hashCode() {
+            return toString().hashCode();
+        }
 
     }
     
@@ -55,8 +68,18 @@ public class KM {
     private void generateInitialMatching() {
         matching = new Matching();
         
-        Pair initialMatch = eqGraphEdges.iterator().next(); // First @ random
-        matching.addEdge(initialMatch);
+        
+        eqGraphEdges.stream()
+            .sorted((lhs, rhs) -> matrix[rhs.row][rhs.col] - matrix[lhs.row][lhs.col])
+            .forEach((edge) -> {
+                if (matching.matchedWith(0, edge.row) < 0 
+                    && matching.matchedWith(1, edge.col) < 0) {
+                    
+                    matching.addEdge(edge);
+                }
+            });
+            
+        System.out.println("Initial Matching: " + matching);
     }
     
     class Matching {
@@ -85,8 +108,13 @@ public class KM {
             Set<Integer> allX = IntStream.range(0, matrix.length)
                 .boxed()
                 .collect(Collectors.toCollection(HashSet::new));
+                
+            System.out.println("getU MatchedX: " + matchedX);
+            System.out.println("getU allX: " + allX);
 
             allX.removeAll(matchedX);
+            
+            System.out.println("getU free vertices: " + allX);
             
             // There must be at least one item
             int u = allX.iterator().next();
@@ -142,6 +170,9 @@ public class KM {
                     i_turn = true;
                 }
             }
+            
+            System.out.println("Current Matchings: " + _edges);
+            System.out.println("Alt Tree: " + altTree);
         
             Set<Pair> matchingsInAltTree = (Set<Pair>) altTree.clone();
             matchingsInAltTree.retainAll(_edges);
@@ -151,6 +182,8 @@ public class KM {
             
             _edges.removeAll(matchingsInAltTree);
             _edges.addAll(newMatchings);
+            
+            System.out.println("Matching after flipping\n" + this.toString());
         }
 
         public String toString() {
@@ -180,6 +213,10 @@ public class KM {
     }
     
     private Set<Integer> getNeighbors(List<Integer> s) {
+        
+        System.out.println("getNeighbors Edges filtered" + eqGraphEdges.stream()
+            .filter(edge -> s.contains(edge.row)).collect(Collectors.toList()));
+            
         // N_l(S)
         return eqGraphEdges.stream()
             .filter(edge -> s.contains(edge.row))
@@ -211,6 +248,9 @@ public class KM {
         for (int y : t) {
             yLabeling[y] += alpha;
         }
+        
+        System.out.println("X Labels: " + Arrays.toString(xLabeling));
+        System.out.println("Y Labels: " + Arrays.toString(yLabeling));
     }
 
     public String run() {
@@ -223,26 +263,37 @@ public class KM {
         while(!exit) {
             switch(state) {
                 case 1: // Generate initial labeling l and matching M in E_l
+                    System.out.println("\nCase 1");
                     findInitialFeasibleLabeling();
                     computeEqualityGraph();
                     generateInitialMatching();
                     state = 2;
                     break;
                 case 2:
+                    System.out.println("\nCase 2:");
+                    System.out.println("Matching: " + matching);
                     if (matching.isPerfect()) {
+                        System.out.println("Matching is perfect!");
                         exit = true;
                         break;
                     }
+                    System.out.println("Matching is not perfect");
                     int u = matching.getU(); // free vertex
                     S = new ArrayList<>();
                     T = new ArrayList<>();
 
                     S.add(u);
+                    System.out.println("S: " + S);
+                    System.out.println("T: " + T);
                     state = 3;
                     break;
                 case 3:
+                    System.out.println("\nCase 3");
                     neighbors = getNeighbors(S);
-                    if (neighbors.equals(T)) {
+                    System.out.println("Neighbors: " +  neighbors);
+                    System.out.println("S: " + S); 
+                    System.out.println("T: " + T);
+                    if (neighbors.equals(new HashSet<Integer>(T))) {
                         int alpha = computeAlpha(S, T);
                         updateLabeling(alpha, S, T);
                         computeEqualityGraph();
@@ -250,19 +301,27 @@ public class KM {
                     state = 4;
                     break;
                 case 4:
+                    System.out.println("\nCase 4:");
                     neighbors = getNeighbors(S);
+                    System.out.println("Neighbors: " + neighbors);
                     neighbors.removeAll(T);
+                    System.out.println("S: " + S);
+                    System.out.println("T: " + T);
                     int y = neighbors.iterator().next();
                     int xMatching = matching.matchedWith(1, y);
 
                     if (xMatching >= 0) {
-                        // y is matched, so extend alt tree.
+                        System.out.printf("y%d is matched with x%d\n", y, xMatching);
                         S.add(xMatching);
                         T.add(y);
+                        System.out.println("S: " + S);
+                        System.out.println("T: " + T);
                         state = 3;
                     } else {
                         // y is free
+                        System.out.printf("y%d is free!\n", y);
                         T.add(y);
+                        System.out.println("T:" + T);
                         matching.flipAugmentingPath(S, T); // Go to 2
                         state = 2;
                     }
