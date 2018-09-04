@@ -1,21 +1,18 @@
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.*;
 
 public class KM {
 
     private final boolean DEBUG = true;
 
     int[][] matrix;
-    int[][] assign;
-    int[][] eqGraph;
     
     int[] xLabeling;
     int[] yLabeling;
     
     public KM(int[][] matrix) {
         this.matrix = matrix;
-        this.assign = new int[matrix.length][matrix.length];
-        this.eqGraph = new int[matrix.length][matrix.length];
     }
     
     private void findInitialFeasibleLabeling() {
@@ -58,44 +55,19 @@ public class KM {
     private void generateInitialMatching() {
         matching = new Matching();
         
-        for (int i = 0; i < eqGraph.length; i++)
-            for (int j = 0; j < eqGraph.length; j++)
-                if (eqGraph[i][j] != 0) {
-                    Pair initialMatch = new Pair(i, j);
-                    matching.addEdge(initialMatch);
-                    return;
-                }
+        Pair initialMatch = eqGraphEdges.iterator().next(); // First @ random
+        matching.addEdge(initialMatch);
     }
     
     class Matching {
         Set<Pair> _edges;
-        Set<Integer> _S;
-        Set<Integer> _T;
         
         public Matching() {
             _edges = new HashSet<Pair>();
-            _S = new HashSet<>();
-            _T = new HashSet<>();
         }
         
         public void addEdge(Pair p) {
             _edges.add(p);
-        }
-
-        public void addToS(HashSet<Integer> vertices) {
-            _S.addAll(vertices);
-        }
-
-        public void addToT(HashSet<Integer> vertices) {
-            _T.addAll(vertices);
-        }
-
-        public Set<Integer> getS() {
-            return _S;
-        }
-
-        public Set<Integer> getT() {
-            return _T;
         }
 
         public int getCost() {
@@ -107,9 +79,11 @@ public class KM {
         public int getU() {
             Set<Integer> matchedX = _edges.stream()
                 .mapToInt(p -> p.row)
+                .boxed()
                 .collect(Collectors.toCollection(HashSet::new));
             
             Set<Integer> allX = IntStream.range(0, matrix.length)
+                .boxed()
                 .collect(Collectors.toCollection(HashSet::new));
 
             allX.removeAll(matchedX);
@@ -138,7 +112,45 @@ public class KM {
         }
         
         public int matchedWith(int axis, int id) {
+            if (axis == 0) {
+                // x
+                for (Pair p : _edges) {
+                    if (p.row == id)
+                        return p.col;
+                }
+                
+            } else if (axis == 1) {
+                // y
+                for (Pair p : _edges) {
+                    if (p.col == id)
+                        return p.row;
+                }
+            }
+            return -1;
+        }
+        
+        public void flipAugmentingPath(List<Integer> s, List<Integer> t) {
+            HashSet<Pair> altTree = new HashSet<>();
+            boolean i_turn = true;
+            for (int i = 0, j = 0; i < s.size();) {
+                altTree.add(new Pair(s.get(i), t.get(j)));
+                if (i_turn) {
+                    i++;
+                    i_turn = false;
+                } else {
+                    j++;
+                    i_turn = true;
+                }
+            }
+        
+            Set<Pair> matchingsInAltTree = (Set<Pair>) altTree.clone();
+            matchingsInAltTree.retainAll(_edges);
             
+            Set<Pair> newMatchings = (Set<Pair>) altTree.clone();
+            newMatchings.removeAll(_edges);
+            
+            _edges.removeAll(matchingsInAltTree);
+            _edges.addAll(newMatchings);
         }
 
         public String toString() {
@@ -155,32 +167,30 @@ public class KM {
     
     private void computeEqualityGraph() {
         eqGraphEdges.clear();
-        for (int i = 0; i < eqGraph.length; i++) {
-            for (int j = 0; j < eqGraph[i].length; j++) {
+        for (int i = 0; i < matrix.length; i++) {
+            for (int j = 0; j < matrix[i].length; j++) {
                 if (matrix[i][j] == xLabeling[i] + yLabeling[j]) {
                     eqGraphEdges.add(new Pair(i, j));
-                    eqGraph[i][j] = matrix[i][j];
-                } else {
-                    eqGraph[i][j] = 0;
                 }
             }
         }
         
         System.out.println("Equality Graph:");
-        for (int[] row : eqGraph)
-            System.out.println(Arrays.toString(row));
+        System.out.println(eqGraphEdges);
     }
     
-    private Set<Integer> getNeighbors(Set<Integer> s) {
+    private Set<Integer> getNeighbors(List<Integer> s) {
         // N_l(S)
         return eqGraphEdges.stream()
             .filter(edge -> s.contains(edge.row))
             .mapToInt(edge -> edge.col)
+            .boxed()
             .collect(Collectors.toCollection(HashSet::new));
     }
     
-    private int computeAlpha(Set<Integer> s, Set<Integer> t) {
-        Set<Integer> allY =-IntStream.range(0, matrix.length)
+    private int computeAlpha(List<Integer> s, List<Integer> t) {
+        Set<Integer> allY = IntStream.range(0, matrix.length)
+            .boxed()
             .collect(Collectors.toCollection(HashSet::new));
         allY.removeAll(t);
         
@@ -193,7 +203,7 @@ public class KM {
         return min;
     }
     
-    private void updateLabeling(int alpha, Set<Integer> s, Set<Integer> t) {
+    private void updateLabeling(int alpha, List<Integer> s, List<Integer> t) {
         for (int x : s) {
             xLabeling[x] -= alpha;
         }
@@ -202,54 +212,67 @@ public class KM {
             yLabeling[y] += alpha;
         }
     }
-    
-    private void flipAugmentingPath(Set<Integer> s, Set<Integer> t) {
-        
-    }
-    
 
     public String run() {
+        List<Integer> S = new ArrayList<>(),
+                      T = new ArrayList<>();
+        int state = 1;
+        boolean exit = false;
+        Set<Integer> neighbors;
         
-        // 1. Generate initial labeling l and matching M in E_l
-        findInitialFeasibleLabeling();
-        computeEqualityGraph();
-        generateInitialMatching();
-        
-        // 2. If M perfect stop!
-        while(!matching.isPerfect()) {
-        
-            int u = matching.getU(); // free vertex
-            Set<Integer> S = matching.getS();
-            Set<Integer> T = matching.getT();
+        while(!exit) {
+            switch(state) {
+                case 1: // Generate initial labeling l and matching M in E_l
+                    findInitialFeasibleLabeling();
+                    computeEqualityGraph();
+                    generateInitialMatching();
+                    state = 2;
+                    break;
+                case 2:
+                    if (matching.isPerfect()) {
+                        exit = true;
+                        break;
+                    }
+                    int u = matching.getU(); // free vertex
+                    S = new ArrayList<>();
+                    T = new ArrayList<>();
 
-            S.add(u);
+                    S.add(u);
+                    state = 3;
+                    break;
+                case 3:
+                    neighbors = getNeighbors(S);
+                    if (neighbors.equals(T)) {
+                        int alpha = computeAlpha(S, T);
+                        updateLabeling(alpha, S, T);
+                        computeEqualityGraph();
+                    }
+                    state = 4;
+                    break;
+                case 4:
+                    neighbors = getNeighbors(S);
+                    neighbors.removeAll(T);
+                    int y = neighbors.iterator().next();
+                    int xMatching = matching.matchedWith(1, y);
 
-            Set<Integer> neighbors = getNeighbors(S);
-
-            if (neighbors.equals(T)) {
-                int alpha = computeAlpha(S, T);
-                updateLabeling(alpha, S, T);
-                computeEqualityGraph();
-            } else {
-                neighbors.removeAll(T);
-                int y = neighbors.iterator().next();
-                int xMatching = matching.matchedWith(1, y);
-
-                if (xMatching >= 0) {
-                    // y is matched, so extend alt tree.
-                    S.add(xMatching);
-                    T.add(y); // Go to 3
-                } else {
-                    // y is free
-                    T.add(y);
-                    flipAugmentingPath(S, T); // Go to 2
-                    S.clear();
-                    T.clear();
-                }
+                    if (xMatching >= 0) {
+                        // y is matched, so extend alt tree.
+                        S.add(xMatching);
+                        T.add(y);
+                        state = 3;
+                    } else {
+                        // y is free
+                        T.add(y);
+                        matching.flipAugmentingPath(S, T); // Go to 2
+                        state = 2;
+                    }
+                    break;
+                default:
+                    throw new RuntimeException("Wring state " + state);
             }
         }
 
-        return mathing.toString();
+        return matching.toString();
     }
 
     public static void main(String args[]) {

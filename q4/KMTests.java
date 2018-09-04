@@ -35,7 +35,7 @@ public class KMTests {
         assertNotNull(m);
         KM km = new KM(m);
         String result = km.run();
-        String expected = "23\n(1,1)\n(2,3)\n(3,2)\n"
+        String expected = "23\n(1,1)\n(2,3)\n(3,2)\n";
         
         assertEquals("Unexpected result", expected, result);
     }
