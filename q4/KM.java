@@ -156,6 +156,34 @@ public class KM {
             }
             return -1;
         }
+
+        /*
+        * Augmenting path is valid if there are no alternating trees.
+        * This function tries to find a node with more than one free candidate edge
+        * not matched.
+        * */
+        private boolean isAugmentingPath(Set<Pair> altTree) {
+            BitSet x = new BitSet(matrix.length); // O(n) bits
+            BitSet y = new BitSet(matrix.length);
+
+            for (Pair edge : altTree) {
+                if (_edges.contains(edge)) continue;
+
+                if (x.get(edge.row)) {
+                    return false;
+                } else {
+                    x.flip(edge.row);
+                }
+
+                if (y.get(edge.col)) {
+                    return false;
+                } else {
+                    y.flip(edge.col);
+                }
+            }
+
+            return true;
+        }
         
         public void flipAugmentingPath(List<Integer> s, List<Integer> t) {
             HashSet<Pair> altTree = new HashSet<>();
@@ -173,15 +201,26 @@ public class KM {
             
             System.out.println("Current Matchings: " + _edges);
             System.out.println("Alt Tree: " + altTree);
-        
-            Set<Pair> matchingsInAltTree = (Set<Pair>) altTree.clone();
-            matchingsInAltTree.retainAll(_edges);
-            
-            Set<Pair> newMatchings = (Set<Pair>) altTree.clone();
-            newMatchings.removeAll(_edges);
-            
-            _edges.removeAll(matchingsInAltTree);
-            _edges.addAll(newMatchings);
+
+            // Proposed alt augmenting path is restricted to E_l
+            // (E_l n A_t)
+            HashSet<Pair> altEqTree = (HashSet<Pair>) altTree.clone();
+            altEqTree.retainAll(eqGraphEdges);
+            // Maybe
+            //altEqTree.addAll(eqGraphEdges);
+
+            if (isAugmentingPath(altEqTree)) {
+                Set<Pair> newMatchings = (Set<Pair>) altEqTree.clone();
+                newMatchings.removeAll(_edges);
+
+                Set<Pair> matchingsInAltTree = (Set<Pair>) altEqTree.clone();
+                matchingsInAltTree.retainAll(_edges);
+
+                _edges.removeAll(matchingsInAltTree);
+                _edges.addAll(newMatchings);
+            } else {
+                System.out.println("\t Oh No! There is no augmenting path :(");
+            }
             
             System.out.println("Matching after flipping\n" + this.toString());
         }
@@ -257,6 +296,7 @@ public class KM {
         List<Integer> S = new ArrayList<>(),
                       T = new ArrayList<>();
         int state = 1;
+        int u = -1;
         boolean exit = false;
         Set<Integer> neighbors;
         
@@ -278,7 +318,7 @@ public class KM {
                         break;
                     }
                     System.out.println("Matching is not perfect");
-                    int u = matching.getU(); // free vertex
+                    u = matching.getU(); // free vertex
                     S = new ArrayList<>();
                     T = new ArrayList<>();
 

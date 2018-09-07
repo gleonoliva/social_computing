@@ -42,7 +42,23 @@
     </target>
     
     <target name="junit" depends="jar">
-        <junit printsummary="withOutAndErr" showoutput="true" outputtoformatters="yes">
+        <junit printsummary="withOutAndErr" showoutput="true" outputtoformatters="yes" fork="true">
+            <!-- DEBUG -->
+            <!-- <formatter type="plain" /> -->
+            <classpath>
+                <path refid="classpath"/>
+                <path refid="application"/>
+            </classpath>
+
+            <batchtest fork="yes">
+                <fileset dir="${src.dir}" includes="**/*Tests.java"/>
+            </batchtest>
+        </junit>
+    </target>
+
+    <target name="debug_junit" depends="compile">
+        <junit printsummary="withOutAndErr" showoutput="true" outputtoformatters="yes" fork="true">
+            <jvmarg value="-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=5005"/>
             <!-- DEBUG -->
             <!-- <formatter type="plain" /> -->
             <classpath>
