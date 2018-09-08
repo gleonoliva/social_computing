@@ -1,3 +1,4 @@
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.Scanner;
 import java.util.stream.Collectors;
@@ -6,7 +7,7 @@ import java.util.stream.IntStream;
 public class DGS {
 
     int[][] weights;
-    double[] goods;
+    double[] prices;
     Integer[] owners;
 
     LinkedList<Integer> queue;
@@ -14,7 +15,7 @@ public class DGS {
 
     public DGS(int[][] matrix) {
         weights = matrix;
-        goods = new double[matrix.length];
+        prices = new double[matrix.length];
         owners = new Integer[matrix.length];
     }
 
@@ -44,8 +45,8 @@ public class DGS {
         double max = Integer.MIN_VALUE;
         int j_max = -1;
         for (int j = 0; j < weights.length; j++) {
-            if (weights[i][j] > max) {
-                max = weights[i][j] - goods[j];
+            if (weights[i][j] - prices[j] > max) {
+                max = weights[i][j] - prices[j];
                 j_max = j;
             }
         }
@@ -53,25 +54,34 @@ public class DGS {
     }
 
     public String run() {
-        final double DELTA = 1.0 / (goods.length + 1);
+        final double DELTA = 1.0 / (prices.length + 1);
         queue = IntStream.range(0, weights.length)
                 .boxed().collect(Collectors.toCollection(LinkedList::new));
 
         while(!queue.isEmpty()) {
-            Integer i = queue.removeFirst();
+            Integer newOwner = queue.removeFirst();
 
-            int j = findMax(i);
+            int favItem = findMax(newOwner);
 
-            if (weights[i][j] - goods[j] >= 0) {
-                if (owners[j] != null) {
-                    queue.addLast(owners[j]);
+            if (weights[newOwner][favItem] - prices[favItem] >= 0) {
+                if (owners[favItem] != null) {
+                    queue.addLast(owners[favItem]);
                 }
-                owners[j] = i;
-                goods[j] += DELTA;
+
+                owners[favItem] = newOwner;
+                prices[favItem] += DELTA;
             }
         }
 
         return currentMatching();
+    }
+
+    private void addUnassignedOwners() {
+        for (int i = 0; i < prices.length; i++) {
+            if (prices[i] == 0) {
+                queue.addLast(i);
+            }
+        }
     }
 
     public static void main(String[] args) {
