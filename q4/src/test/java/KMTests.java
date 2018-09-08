@@ -2,7 +2,6 @@ import org.junit.Test;
 
 import static org.junit.Assert.*;
 import java.util.*;
-import java.io.*;
 
 public class KMTests {
     
@@ -32,7 +31,6 @@ public class KMTests {
 
     private String loadResult(String filePath) {
         Scanner in = new Scanner(getClass().getResourceAsStream(filePath));
-
         StringBuffer sb = new StringBuffer();
 
         while (in.hasNext()) {
@@ -41,19 +39,23 @@ public class KMTests {
 
         return sb.toString();
     }
-    
-    @Test
-    public void testInput0() {
 
-        String inputFilePath = "input.txt";
-        
-        int[][] m = loadMatrix(inputFilePath);
+    private void testBase(String inputPath, String outputPath) {
+        int[][] m = loadMatrix(inputPath);
         assertNotNull(m);
         KM km = new KM(m);
         String result = km.run();
-        String expected = "23\n(1,1)\n(2,3)\n(3,2)\n";
+        String expected = loadResult(outputPath);
 
         assertTrue(equivalentResults(expected, result));
+    }
+    
+    @Test
+    public void testInput0() {
+        String inputFilePath = "input.txt";
+        String outputFilePath = "input_result.txt";
+
+        testBase(inputFilePath, outputFilePath);
     }
 
     @Test
@@ -61,13 +63,7 @@ public class KMTests {
         String inputFilePath = "in1.txt";
         String outputFilePath = "test1_result.txt";
 
-        int[][] m = loadMatrix(inputFilePath);
-        assertNotNull(m);
-        KM km = new KM(m);
-        String result = km.run();
-        String expected = loadResult(outputFilePath);
-
-        assertTrue(equivalentResults(expected, result));
+        testBase(inputFilePath, outputFilePath);
     }
 
     @Test
@@ -75,13 +71,7 @@ public class KMTests {
         String inputFilePath = "test2.txt";
         String outputFilePath = "test2_result.txt";
 
-        int[][] m = loadMatrix(inputFilePath);
-        assertNotNull(m);
-        KM km = new KM(m);
-        String result = km.run();
-        String expected = loadResult(outputFilePath);
-
-        assertTrue(equivalentResults(expected, result));
+        testBase(inputFilePath, outputFilePath);
     }
 
     @Test
@@ -89,13 +79,7 @@ public class KMTests {
         String inputFilePath = "test3.txt";
         String outputFilePath = "test3_result.txt";
 
-        int[][] m = loadMatrix(inputFilePath);
-        assertNotNull(m);
-        KM km = new KM(m);
-        String result = km.run();
-        String expected = loadResult(outputFilePath);
-
-        assertTrue(equivalentResults(expected, result));
+        testBase(inputFilePath, outputFilePath);
     }
 
     @Test
@@ -103,13 +87,7 @@ public class KMTests {
         String inputFilePath = "test4.txt";
         String outputFilePath = "test4_result.txt";
 
-        int[][] m = loadMatrix(inputFilePath);
-        assertNotNull(m);
-        KM km = new KM(m);
-        String result = km.run();
-        String expected = loadResult(outputFilePath);
-
-        assertTrue(equivalentResults(expected, result));
+        testBase(inputFilePath, outputFilePath);
     }
 
     @Test
@@ -117,12 +95,6 @@ public class KMTests {
         String inputFilePath = "M3.txt";
         String outputFilePath = "M3_result.txt";
 
-        int[][] m = loadMatrix(inputFilePath);
-        assertNotNull(m);
-        KM km = new KM(m);
-        String result = km.run();
-        String expected = loadResult(outputFilePath);
-
-        assertTrue(equivalentResults(expected, result));
+        testBase(inputFilePath, outputFilePath);
     }
 }

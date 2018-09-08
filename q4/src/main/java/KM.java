@@ -82,20 +82,17 @@ public class KM {
         }
 
         public boolean isPerfect() {
-            boolean[] x = new boolean[matrix.length];
-            boolean[] y = new boolean[matrix.length];
+            BitSet x = new BitSet(matrix.length);
+            BitSet y = new BitSet(matrix.length);
             for (Edge p : _edges) {
-                x[p.row] = true;
-                y[p.col] = true;
+                x.set(p.row);
+                y.set(p.col);
             }
 
-            for (boolean b : x)
-                if (!b) return false;
+            boolean allXMatched = x.nextClearBit(0) < 0 || x.nextClearBit(0) >= matrix.length;
+            boolean allYMatched = y.nextClearBit(0) < 0 || y.nextClearBit(0) >= matrix.length;
 
-            for (boolean b : y)
-                if (!b) return false;
-
-            return true;
+            return allXMatched && allYMatched;
         }
 
         public int matchedWith(int axis, int id) {
@@ -184,7 +181,7 @@ public class KM {
         int state = 1;
         int u = -1;
         boolean exit = false;
-        Set<Integer> neighbors = new HashSet<>();
+        Set<Integer> neighbors;
         HashSet<Edge> altTree;
 
         while(!exit) {
