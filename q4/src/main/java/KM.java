@@ -7,18 +7,18 @@ public class KM {
     private final boolean DEBUG = true;
 
     int[][] matrix;
-    
+
     int[] xLabeling;
     int[] yLabeling;
-    
+
     public KM(int[][] matrix) {
         this.matrix = matrix;
     }
-    
+
     private void findInitialFeasibleLabeling() {
         xLabeling = new int[matrix.length];
         yLabeling = new int[matrix.length];
-        
+
         for (int i = 0; i < matrix.length; i++) {
             int max = Integer.MIN_VALUE;
             for (int j = 0; j < matrix[i].length; j++) {
@@ -26,11 +26,11 @@ public class KM {
             }
             xLabeling[i] = max;
         }
-        
+
         if (DEBUG) {
             System.out.println("X Labels:");
             System.out.println(Arrays.toString(xLabeling));
-            
+
             System.out.println("Y Labels:");
             System.out.println(Arrays.toString(yLabeling));
         }
@@ -47,81 +47,81 @@ public class KM {
         public String toString() {
             return String.format("[%d => %d]", row, col);
         }
-        
+
         public boolean equals(Object o) {
             if (o == this) return true;
             if (o == null) return false;
             if (getClass() != o.getClass()) return false;
             Pair p = (Pair)o;
-            return this.row == p.row 
+            return this.row == p.row
                     && this.col == p.col;
         }
-        
+
         public int hashCode() {
             return toString().hashCode();
         }
 
     }
-    
+
     private Matching matching;
-    
+
     private void generateInitialMatching() {
         matching = new Matching();
-        
-        
+
+
         eqGraphEdges.stream()
-            .sorted((lhs, rhs) -> matrix[rhs.row][rhs.col] - matrix[lhs.row][lhs.col])
-            .forEach((edge) -> {
-                if (matching.matchedWith(0, edge.row) < 0 
-                    && matching.matchedWith(1, edge.col) < 0) {
-                    
-                    matching.addEdge(edge);
-                }
-            });
-            
+                .sorted((lhs, rhs) -> matrix[rhs.row][rhs.col] - matrix[lhs.row][lhs.col])
+                .forEach((edge) -> {
+                    if (matching.matchedWith(0, edge.row) < 0
+                            && matching.matchedWith(1, edge.col) < 0) {
+
+                        matching.addEdge(edge);
+                    }
+                });
+
         System.out.println("Initial Matching: " + matching);
     }
-    
+
     class Matching {
         Set<Pair> _edges;
-        
+
         public Matching() {
             _edges = new HashSet<Pair>();
         }
-        
+
         public void addEdge(Pair p) {
             _edges.add(p);
         }
 
         public int getCost() {
             return _edges.stream()
-                .mapToInt(p -> matrix[p.row][p.col])
-                .sum();
+                    .mapToInt(p -> matrix[p.row][p.col])
+                    .sum();
         }
 
         public int getU() {
             Set<Integer> matchedX = _edges.stream()
-                .mapToInt(p -> p.row)
-                .boxed()
-                .collect(Collectors.toCollection(HashSet::new));
-            
+                    .mapToInt(p -> p.row)
+                    .boxed()
+                    .collect(Collectors.toCollection(HashSet::new));
+
             Set<Integer> allX = IntStream.range(0, matrix.length)
-                .boxed()
-                .collect(Collectors.toCollection(HashSet::new));
-                
+                    .boxed()
+                    .collect(Collectors.toCollection(HashSet::new));
+
             System.out.println("getU MatchedX: " + matchedX);
             System.out.println("getU allX: " + allX);
 
             allX.removeAll(matchedX);
-            
+
             System.out.println("getU free vertices: " + allX);
-            
+
             // There must be at least one item
             int u = allX.iterator().next();
-            
+
             return u;
         }
-        
+
         public boolean isPerfect() {
             boolean[] x = new boolean[matrix.length];
             boolean[] y = new boolean[matrix.length];
@@ -129,16 +129,16 @@ public class KM {
                 x[p.row] = true;
                 y[p.col] = true;
             }
-            
+
             for (boolean b : x)
                 if (!b) return false;
-                
+
             for (boolean b : y)
                 if (!b) return false;
-                
+
             return true;
         }
-        
+
         public int matchedWith(int axis, int id) {
             if (axis == 0) {
                 // x
@@ -146,7 +146,7 @@ public class KM {
                     if (p.row == id)
                         return p.col;
                 }
-                
+
             } else if (axis == 1) {
                 // y
                 for (Pair p : _edges) {
@@ -158,10 +158,10 @@ public class KM {
         }
 
         /*
-        * Augmenting path is valid if there are no alternating trees.
-        * This function tries to find a node with more than one free candidate edge
-        * not matched.
-        * */
+         * Augmenting path is valid if there are no alternating trees.
+         * This function tries to find a node with more than one free candidate edge
+         * not matched.
+         * */
         private boolean isAugmentingPath(Set<Pair> altTree) {
             BitSet x = new BitSet(matrix.length); // O(n) bits
             BitSet y = new BitSet(matrix.length);
@@ -184,7 +184,7 @@ public class KM {
 
             return true;
         }
-        
+
         public void flipAugmentingPath(List<Integer> s, List<Integer> t) {
             HashSet<Pair> altTree = new HashSet<>();
             boolean i_turn = true;
@@ -198,7 +198,7 @@ public class KM {
                     i_turn = true;
                 }
             }
-            
+
             System.out.println("Current Matchings: " + _edges);
             System.out.println("Alt Tree: " + altTree);
 
@@ -221,7 +221,7 @@ public class KM {
             } else {
                 System.out.println("\t Oh No! There is no augmenting path :(");
             }
-            
+
             System.out.println("Matching after flipping\n" + this.toString());
         }
 
@@ -229,14 +229,14 @@ public class KM {
             StringBuffer sb = new StringBuffer();
             sb.append(getCost() + "\n");
             for (Pair p : _edges) {
-                sb.append(String.format("(%d,%d)\n", p.row, p.col));
+                sb.append(String.format("(%d,%d)\n", p.row + 1, p.col + 1));
             }
             return sb.toString();
         }
     }
 
     private HashSet<Pair> eqGraphEdges = new HashSet<Pair>();
-    
+
     private void computeEqualityGraph() {
         eqGraphEdges.clear();
         for (int i = 0; i < matrix.length; i++) {
@@ -246,30 +246,30 @@ public class KM {
                 }
             }
         }
-        
+
         System.out.println("Equality Graph:");
         System.out.println(eqGraphEdges);
     }
-    
+
     private Set<Integer> getNeighbors(List<Integer> s) {
-        
+
         System.out.println("getNeighbors Edges filtered" + eqGraphEdges.stream()
-            .filter(edge -> s.contains(edge.row)).collect(Collectors.toList()));
-            
+                .filter(edge -> s.contains(edge.row)).collect(Collectors.toList()));
+
         // N_l(S)
         return eqGraphEdges.stream()
-            .filter(edge -> s.contains(edge.row))
-            .mapToInt(edge -> edge.col)
-            .boxed()
-            .collect(Collectors.toCollection(HashSet::new));
+                .filter(edge -> s.contains(edge.row))
+                .mapToInt(edge -> edge.col)
+                .boxed()
+                .collect(Collectors.toCollection(HashSet::new));
     }
-    
+
     private int computeAlpha(List<Integer> s, List<Integer> t) {
         Set<Integer> allY = IntStream.range(0, matrix.length)
-            .boxed()
-            .collect(Collectors.toCollection(HashSet::new));
+                .boxed()
+                .collect(Collectors.toCollection(HashSet::new));
         allY.removeAll(t);
-        
+
         int min = Integer.MAX_VALUE;
         for (int x : s) {
             for (int y : allY) {
@@ -278,28 +278,28 @@ public class KM {
         }
         return min;
     }
-    
+
     private void updateLabeling(int alpha, List<Integer> s, List<Integer> t) {
         for (int x : s) {
             xLabeling[x] -= alpha;
         }
-        
+
         for (int y : t) {
             yLabeling[y] += alpha;
         }
-        
+
         System.out.println("X Labels: " + Arrays.toString(xLabeling));
         System.out.println("Y Labels: " + Arrays.toString(yLabeling));
     }
 
     public String run() {
         List<Integer> S = new ArrayList<>(),
-                      T = new ArrayList<>();
+                T = new ArrayList<>();
         int state = 1;
         int u = -1;
         boolean exit = false;
         Set<Integer> neighbors;
-        
+
         while(!exit) {
             switch(state) {
                 case 1: // Generate initial labeling l and matching M in E_l
@@ -331,7 +331,7 @@ public class KM {
                     System.out.println("\nCase 3");
                     neighbors = getNeighbors(S);
                     System.out.println("Neighbors: " +  neighbors);
-                    System.out.println("S: " + S); 
+                    System.out.println("S: " + S);
                     System.out.println("T: " + T);
                     if (neighbors.equals(new HashSet<Integer>(T))) {
                         int alpha = computeAlpha(S, T);
@@ -378,11 +378,11 @@ public class KM {
         Scanner in = new Scanner(System.in);
         int n = in.nextInt(); // Number of rows and column
         int[][] matrix = new int[n][n];
-        
-        for (int i = 0; i < n; i++) 
-            for (int j = 0; j < n; j++) 
+
+        for (int i = 0; i < n; i++)
+            for (int j = 0; j < n; j++)
                 matrix[i][j] = in.nextInt();
-                
+
         KM km = new KM(matrix);
 
         String result = km.run();
