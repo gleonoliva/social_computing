@@ -175,6 +175,7 @@ public class KM {
     }
 
 
+
     public String run() {
         List<Integer> S = new ArrayList<>(),
                 T = new ArrayList<>();
@@ -214,9 +215,7 @@ public class KM {
                     state = 4;
                     break;
                 case 4:
-                    neighbors = getNeighbors(S);
-                    neighbors.removeAll(T);
-                    int y = neighbors.iterator().next();
+                    int y = chooseY(S, T);
                     int xMatching = matching.matchedWith(1, y);
 
                     if (xMatching >= 0) {
@@ -237,6 +236,17 @@ public class KM {
         }
 
         return matching.toString();
+    }
+
+    Random r = new Random();
+
+    private int chooseY(List<Integer> S, List<Integer> T) {
+        Set<Integer> neighbors = getNeighbors(S);
+        neighbors.removeAll(T);
+        int length = neighbors.size();
+        int y = neighbors.stream().skip(r.nextInt(length)).findFirst().get();
+        return y;
+
     }
 
     private void findInitialFeasibleLabeling() {
