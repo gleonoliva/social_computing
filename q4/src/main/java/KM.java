@@ -174,8 +174,6 @@ public class KM {
         }
     }
 
-
-
     public String run() {
         List<Integer> S = new ArrayList<>(),
                 T = new ArrayList<>();

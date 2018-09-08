@@ -1,21 +1,21 @@
 import org.junit.Test;
 import utils.TestHelper;
 
-import static org.junit.Assert.*;
-import java.util.*;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
-public class KMTests {
+public class DGSTests {
 
     private void testBase(String inputPath, String outputPath) {
         int[][] m = TestHelper.loadMatrix(getClass().getResourceAsStream(inputPath));
         assertNotNull(m);
-        KM km = new KM(m);
-        String result = km.run();
+        DGS dgs = new DGS(m);
+        String result = dgs.run();
         String expected = TestHelper.loadResult(getClass().getResourceAsStream(outputPath));
 
         assertTrue(TestHelper.equivalentResults(expected, result));
     }
-    
+
     @Test
     public void testInput0() {
         String inputFilePath = "input.txt";
