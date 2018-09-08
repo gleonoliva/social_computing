@@ -1,4 +1,3 @@
-import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.Scanner;
 import java.util.stream.Collectors;
@@ -74,14 +73,6 @@ public class DGS {
         }
 
         return currentMatching();
-    }
-
-    private void addUnassignedOwners() {
-        for (int i = 0; i < prices.length; i++) {
-            if (prices[i] == 0) {
-                queue.addLast(i);
-            }
-        }
     }
 
     public static void main(String[] args) {

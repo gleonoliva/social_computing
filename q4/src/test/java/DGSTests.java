@@ -26,7 +26,7 @@ public class DGSTests {
 
     @Test
     public void testInput1() {
-        String inputFilePath = "in1.txt";
+        String inputFilePath = "test1.txt";
         String outputFilePath = "test1_result.txt";
 
         testBase(inputFilePath, outputFilePath);
