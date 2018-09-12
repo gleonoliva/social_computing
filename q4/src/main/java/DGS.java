@@ -84,9 +84,10 @@ public class DGS {
             for (int j = 0; j < n; j++)
                 matrix[i][j] = in.nextInt();
 
+        long startTime = System.nanoTime();
         DGS dgs = new DGS(matrix);
-
         String result = dgs.run();
         System.out.print(result);
+        System.out.printf("Total time takem for DGS is %d\n", System.nanoTime() - startTime);
     }
 }

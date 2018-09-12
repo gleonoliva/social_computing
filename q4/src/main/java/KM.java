@@ -345,10 +345,11 @@ public class KM {
             for (int j = 0; j < n; j++)
                 matrix[i][j] = in.nextInt();
 
+        long startTime = System.nanoTime();
         KM km = new KM(matrix);
-
         String result = km.run();
         System.out.print(result);
+        System.out.printf("Total time taken for KM is %d\n", System.nanoTime() - startTime);
     }
 
 }
