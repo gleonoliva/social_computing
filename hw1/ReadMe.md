@@ -1,17 +1,20 @@
 
 # How to run
 
-You need to install [Apache ant](https://ant.apache.org/).
+In a terminal
 
 ## Kuhn-Munkres
 
 ```
-ant < input.txt
+> javac KM.java
+
+> java KM < input.txt
 ```
 
-### Testing
+## Demange-Gale-Sotomayor
 
 ```
-ant junit
-```
+> javac DGS.java
 
+> java DGS < input.txt
+```
