@@ -7,9 +7,14 @@ public class SMP {
     int[][] pref1;
     int[][] pref2;
 
-    public SMP(int[][] pref1, int[][] pref2) {
-        this.pref1 = pref1;
-        this.pref2 = pref2;
+    public SMP(int[][] pref1, int[][] pref2, String optimality) {
+        if (optimality.compareTo("m") == 0) {
+            this.pref1 = pref1;
+            this.pref2 = pref2;
+        } else {
+            this.pref1 = pref2;
+            this.pref2 = pref1;
+        }
     }
 
     public String run() {
@@ -31,6 +36,16 @@ public class SMP {
             return;
         }
 
+        String optimality;
+        if (args[1].compareTo("m") != 0 || args[1].compareTo("w") != 0) {
+            System.out.println("You must specify an option for optimality.");
+            System.out.println("m : Man optimal");
+            System.out.println("w : Woman optimal");
+            return;
+        } else {
+            optimality = args[1];
+        }
+
         int n = input.nextInt();
 
         int[][] man_preferences = new int[n][n];
@@ -44,7 +59,7 @@ public class SMP {
             for(int j = 0; j < n; j++)
                 woman_preferences[i][j] = input.nextInt();
 
-        SMP smp = new SMP(man_preferences, woman_preferences);
+        SMP smp = new SMP(man_preferences, woman_preferences, optimality);
         System.out.println(smp.run());
     }
 }
