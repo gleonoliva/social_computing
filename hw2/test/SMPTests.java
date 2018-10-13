@@ -19,7 +19,7 @@ public class SMPTests {
                 actualLines.containsAll(expectedLines);
     }
 
-    public static String loadResult(InputStream inStream) {
+    private static String loadResult(InputStream inStream) {
         Scanner in = new Scanner(inStream);
         StringBuffer sb = new StringBuffer();
 
