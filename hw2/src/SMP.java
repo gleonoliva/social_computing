@@ -77,7 +77,18 @@ public class SMP {
     }
 
     private boolean prefers(Integer preferredPerson, Integer freePerson, Integer pairedPerson) {
-        return pref2[preferredPerson][freePerson] < pref2[preferredPerson][pairedPerson];
+        int rankFreePerson = -1;
+        int rankPairedPerson = -1;
+        for (int i = 0; i < pref2.length; i++) {
+            if (pref2[preferredPerson][i] - 1 == freePerson) {
+                rankFreePerson = i;
+            }
+            if (pref2[preferredPerson][i] - 1 == pairedPerson) {
+                rankPairedPerson = i;
+            }
+        }
+
+        return rankFreePerson > rankPairedPerson;
     }
 
     private int findPreferredPerson(int freePerson) {
