@@ -24,23 +24,21 @@ public class SMP {
         assignment = new boolean[pref1.length][pref1.length];
     }
 
-
     public String run() {
         ArrayList<Integer> freeList = IntStream.range(0, pref1.length).
                 boxed().
                 collect(Collectors.toCollection(ArrayList::new));
 
         while(!freeList.isEmpty()) {
-            Integer freePerson = freeList.remove(0); // This could be randomized
-            Integer preferredPerson = findPreferredPerson(freePerson);
-            Integer pairedPerson = proposeToPerson(freePerson, preferredPerson);
+            int freePerson = freeList.remove(0);
+            int preferredPerson = findPreferredPerson(freePerson);
+            int pairedPerson = proposeToPerson(freePerson, preferredPerson);
 
-            if (pairedPerson == null) {
-                // How lucky! preferred person accepted!
+            if (pairedPerson < 0) {
+                // How lucky! preferred person is free & accepted!
                 assign(freePerson, preferredPerson);
-                continue;
             } else {
-                Integer rejected;
+                int rejected;
                 if (prefers(preferredPerson, freePerson, pairedPerson)) {
                     rejected = freePerson;
                 } else {
@@ -50,7 +48,6 @@ public class SMP {
                 freeList.add(rejected);
             }
         }
-
 
         return formatAssignment();
     }
@@ -69,14 +66,13 @@ public class SMP {
         return sb.toString();
     }
 
-    private void assign(Integer freePerson, Integer preferredPerson) {
-        int f = freePerson.intValue();
+    private void assign(int freePerson, int preferredPerson) {
         for (int i = 0; i < assignment.length; i++) {
-            assignment[i][preferredPerson] = i == f? true : false;
+            assignment[i][preferredPerson] = i == freePerson;
         }
     }
 
-    private boolean prefers(Integer preferredPerson, Integer freePerson, Integer pairedPerson) {
+    private boolean prefers(int preferredPerson, int freePerson, int pairedPerson) {
         int rankFreePerson = -1;
         int rankPairedPerson = -1;
         for (int i = 0; i < pref2.length; i++) {
@@ -95,8 +91,8 @@ public class SMP {
         return pref1[freePerson][proposed[freePerson]] - 1;
     }
 
-    private Integer proposeToPerson(Integer freePerson, Integer preferredPerson) {
-        Integer pairedWith = null;
+    private int proposeToPerson(int freePerson, int preferredPerson) {
+        int pairedWith = -1;
         for (int i = 0; i < pref1.length; i++) {
             if (assignment[i][preferredPerson]) {
                 pairedWith = i;
