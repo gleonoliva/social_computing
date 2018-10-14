@@ -47,19 +47,60 @@ public class SMPTests {
         return new SMP(mlist, wlist, optimality);
     }
 
-    @Test
-    public void test1() {
-        SMP smp = setup(getClass().getResourceAsStream("input.txt"), "m");
+    private void testBase(String inputFileName, String resultFileName, String optimality) {
+        SMP smp = setup(getClass().getResourceAsStream(inputFileName), optimality);
         String result = smp.run();
-        String expected = loadResult(getClass().getResourceAsStream("m_result.txt"));
+        String expected = loadResult(getClass().getResourceAsStream(resultFileName));
         assertTrue(equivalentResults(expected, result));
     }
 
     @Test
-    public void test2() {
-        SMP smp = setup(getClass().getResourceAsStream("input.txt"), "w");
-        String result = smp.run();
-        String expected = loadResult(getClass().getResourceAsStream("w_result.txt"));
-        assertTrue(equivalentResults(expected, result));
+    public void testInputM() {
+        testBase("input.txt", "m_result.txt", "m");
+    }
+
+    @Test
+    public void testInputW() {
+        testBase("input.txt", "w_result.txt", "w");
+    }
+
+    @Test
+    public void test1M() {
+        testBase("test1.txt", "test1_m_result.txt", "m");
+    }
+
+    @Test
+    public void test1W() {
+        testBase("test1.txt", "test1_w_result.txt", "w");
+    }
+
+    @Test
+    public void test2M() {
+        testBase("test2.txt", "test2_m_result.txt", "m");
+    }
+
+    @Test
+    public void test2W() {
+        testBase("test2.txt", "test2_w_result.txt", "w");
+    }
+
+    @Test
+    public void test3M() {
+        testBase("test3.txt", "test3_m_result.txt", "m");
+    }
+
+    @Test
+    public void test3W() {
+        testBase("test3.txt", "test3_w_result.txt", "w");
+    }
+
+    @Test
+    public void test4M() {
+        testBase("test4.txt", "test4_m_result.txt", "m");
+    }
+
+    @Test
+    public void test4W() {
+        testBase("test4.txt", "test4_w_result.txt", "w");
     }
 }
