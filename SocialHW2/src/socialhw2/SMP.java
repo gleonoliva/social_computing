@@ -112,3 +112,46 @@ public class SMP {
     }
     
 }
+
+class Suitor {
+     int[] preference_list;
+    int betrothed_id = -1;
+    
+    public Suitor (int[] pref_list){
+        this.preference_list = pref_list;
+    }
+    
+    public int get_prefid_at(int prefid_to_check){
+        for(int i = 0; i < this.preference_list.length; i++){
+            if(this.preference_list[i] == prefid_to_check){
+                return i;
+            }
+        }
+        return -1;
+    }
+    
+    public void update_betrothed_id(int new_id){
+        this.betrothed_id = new_id;
+    }
+}
+
+class Bae extends Suitor{
+    
+    public Bae(int[] pref_list) {
+        super(pref_list);
+    }
+    
+    public Boolean check_new_proposal(int new_proposal_id){
+        for(int i = 0; i < this.preference_list.length; i++){
+            if(this.betrothed_id == this.preference_list[i]){
+                //if they reach old partner's id first the old partner is preferred
+                return false;
+            }
+            if(new_proposal_id == this.preference_list[i]){
+                return true;
+            }
+        }
+        return false;
+    }
+}
+
